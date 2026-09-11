@@ -91,6 +91,9 @@ Nada de esto se ha probado en un plegable físico. El método de iframes reprodu
 queries, `dvh` y container queries — por eso las medidas son fiables para lo que miden — pero no el
 DPR, ni la bisagra, ni las peculiaridades del navegador del dispositivo.
 
+> **En el roadmap:** conseguir un plegable físico y validar sobre hardware real. Es lo que convertiría
+> los puntos no verificados de arriba en hechos comprobados — o en correcciones.
+
 ## Qué no hace este skill
 
 No decide la dirección estética (tipografía, paleta, personalidad visual) — eso es `frontend-design`.

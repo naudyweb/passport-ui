@@ -131,6 +131,21 @@ El método de iframes reproduce fielmente media queries, `dvh` y container queri
 mediciones son fiables para lo que miden. No reproduce el DPR, la bisagra ni las peculiaridades del
 navegador del dispositivo.
 
+## Roadmap
+
+**Validación en hardware real.** Conseguir un dispositivo plegable y ejecutar sobre él la batería de
+perfiles es la siguiente prioridad del proyecto: es lo que separa los puntos verificados de los que
+hoy solo están documentados. En cuanto exista, se cierran de una vez:
+
+- los patrones de bisagra (`viewport-segments`) — confirmarlos o corregirlos
+- `env(safe-area-inset-*)` en apaisado, hoy invisible dentro de un iframe
+- la postura a medio plegar, no simulable en escritorio
+- el comportamiento real al desplegar: ¿resize del mismo documento, o recarga?
+- DPR y navegador del dispositivo
+
+Hasta entonces, las secciones afectadas de la documentación indican explícitamente qué está sin
+verificar, y esa advertencia se retirará solo cuando haya medidas de un dispositivo físico.
+
 ## Alcance
 
 `passport-ui` no decide la dirección estética de un proyecto — tipografía, paleta, personalidad
