@@ -1,0 +1,154 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8">
+<title>passport-ui · harness</title>
+<style>
+:root{color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;background:#14161c;color:#d7dbe4}
+header{padding:10px 16px;background:#1b1f28;border-bottom:1px solid #2a3040;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+input{flex:1;min-width:220px;background:#0f1218;border:1px solid #2a3040;color:#d7dbe4;padding:6px 10px;border-radius:6px;font:inherit}
+button{background:#3b5bdb;color:#fff;border:0;padding:6px 14px;border-radius:6px;font:inherit;cursor:pointer}
+.wrap{display:flex;gap:20px;padding:20px;align-items:flex-start;overflow-x:auto}
+.frame{flex:0 0 auto}
+.frame h2{margin:0 0 6px;font-size:12px;font-weight:600;color:#8b93a7;letter-spacing:.04em}
+iframe{border:1px solid #3a4152;background:#fff;display:block}
+iframe.morphing{transition:width .45s cubic-bezier(.2,.7,.3,1),height .45s cubic-bezier(.2,.7,.3,1);transform-origin:0 0}
+.probe{margin-top:8px;font-size:11px;white-space:pre;color:#9aa3b5;max-width:100%;overflow-x:auto}
+.pass{color:#57c98a}.fail{color:#ff6b6b}
+</style></head><body>
+<header>
+  <strong>passport-ui harness</strong>
+  <input id="url" placeholder="http://localhost:3000">
+  <label><input type="checkbox" id="fit" checked> escalar para que quepa</label>
+  <button id="go">Cargar</button>
+  <button id="probe">Medir</button>
+  <button id="unfold">Simular apertura</button>
+</header>
+<div class="wrap" id="wrap"></div>
+<script>
+const PROFILES = [
+  { name:'passport-cover-xs', w:820, h:490 },
+  { name:'passport-cover',    w:880, h:550 },
+  { name:'passport-wide',     w:900, h:535 },
+  { name:'unfolded',          w:1000,h:750 },
+  { name:'phone-tall',        w:390, h:844 },
+];
+const params = new URLSearchParams(location.search);
+const only = params.get('profile');
+const list = only ? PROFILES.filter(p => p.name === only) : PROFILES;
+const urlInput = document.getElementById('url');
+urlInput.value = params.get('url') || 'http://localhost:3000';
+
+function render() {
+  const url = urlInput.value;
+  const fit = document.getElementById('fit').checked && !only;
+  const wrap = document.getElementById('wrap');
+  wrap.innerHTML = '';
+  const scale = fit ? Math.min(1, (innerHeight - 190) / Math.max(...list.map(p => p.h))) : 1;
+  for (const p of list) {
+    const box = document.createElement('div');
+    box.className = 'frame';
+    box.innerHTML = `<h2>${p.name} · ${p.w}×${p.h} · ${(p.w/p.h).toFixed(2)}</h2>`;
+    const holder = document.createElement('div');
+    holder.style.cssText = `width:${p.w*scale}px;height:${p.h*scale}px;overflow:hidden`;
+    const f = document.createElement('iframe');
+    f.width = p.w; f.height = p.h; f.src = url; f.dataset.profile = p.name;
+    f.style.cssText = `transform:scale(${scale});transform-origin:0 0`;
+    holder.appendChild(f); box.appendChild(holder);
+    const pre = document.createElement('div');
+    pre.className = 'probe'; pre.dataset.for = p.name;
+    box.appendChild(pre);
+    wrap.appendChild(box);
+  }
+}
+
+const PROBE = (win) => {
+  const d = win.document, vw = win.innerWidth, vh = win.innerHeight;
+  const all = [...d.querySelectorAll('body *')];
+  const fixedPx = all
+    .filter(el => ['fixed','sticky'].includes(win.getComputedStyle(el).position))
+    .filter(el => el.getBoundingClientRect().width > vw * 0.5)
+    .reduce((s, el) => s + el.getBoundingClientRect().height, 0);
+  const overflowing = all
+    .filter(el => el.getBoundingClientRect().right > vw + 1)
+    .slice(0, 8)
+    .map(el => el.tagName.toLowerCase() + (el.className ? '.' + String(el.className).split(' ')[0] : ''));
+  return {
+    pageHeight: d.scrollingElement.scrollHeight,
+    screensOfScroll: +(d.scrollingElement.scrollHeight / vh).toFixed(1),
+    horizontalScroll: d.scrollingElement.scrollWidth > vw + 1,
+    fixedChromePct: Math.round(fixedPx / vh * 100),
+    overflowing,
+  };
+};
+
+function probeAll() {
+  for (const f of document.querySelectorAll('iframe')) {
+    const out = document.querySelector(`.probe[data-for="${f.dataset.profile}"]`);
+    try {
+      const r = PROBE(f.contentWindow);
+      const bad = r.horizontalScroll || r.fixedChromePct > 25 || r.overflowing.length;
+      out.innerHTML = `<span class="${bad ? 'fail' : 'pass'}">${bad ? 'FALLA' : 'pasa'}</span>` +
+        `  chrome ${r.fixedChromePct}%  scroll ${r.screensOfScroll}x` +
+        `  horiz ${r.horizontalScroll}` +
+        (r.overflowing.length ? `\ndesborda: ${r.overflowing.join(', ')}` : '');
+    } catch (e) {
+      out.textContent = 'no medible (cross-origin): ' + e.message;
+    }
+  }
+  return [...document.querySelectorAll('.probe')].map(p => p.dataset.for + ' → ' + p.textContent).join('\n');
+}
+window.probeAll = probeAll;
+
+// Simula abrir el plegable: el MISMO iframe pasa de cover a interior sin recargarse,
+// así se ve si el contenido salta y si se conserva scroll / foco / lo escrito.
+async function simulateUnfold() {
+  const from = PROFILES.find(p => p.name === 'passport-cover-xs');
+  const to   = PROFILES.find(p => p.name === 'unfolded');
+  const wrap = document.getElementById('wrap');
+  wrap.innerHTML = '';
+  const box = document.createElement('div');
+  box.className = 'frame';
+  box.innerHTML = `<h2>simulación de apertura · ${from.w}×${from.h} → ${to.w}×${to.h}</h2>`;
+  const f = document.createElement('iframe');
+  f.className = 'morphing';
+  f.src = urlInput.value; f.dataset.profile = 'unfold';
+  const fit = Math.min(1, (innerHeight - 190) / to.h);
+  f.style.width = from.w + 'px'; f.style.height = from.h + 'px';
+  f.style.transform = `scale(${fit})`;
+  box.appendChild(f);
+  const pre = document.createElement('div');
+  pre.className = 'probe'; pre.dataset.for = 'unfold';
+  box.appendChild(pre);
+  wrap.appendChild(box);
+
+  await new Promise(r => f.addEventListener('load', r, { once: true }));
+  await new Promise(r => setTimeout(r, 400));
+
+  // estado antes de abrir, para comprobar que sobrevive
+  let before = {};
+  try {
+    const w = f.contentWindow;
+    w.scrollTo(0, Math.min(120, w.document.scrollingElement.scrollHeight - w.innerHeight));
+    await new Promise(r => setTimeout(r, 150));
+    before = { scroll: w.scrollY, focus: w.document.activeElement?.tagName };
+  } catch {}
+
+  f.style.width = to.w + 'px'; f.style.height = to.h + 'px';   // ← la apertura
+  await new Promise(r => setTimeout(r, 700));
+
+  try {
+    const w = f.contentWindow;
+    const after = { scroll: w.scrollY, focus: w.document.activeElement?.tagName };
+    const perdido = Math.abs(after.scroll - before.scroll) > 24 || after.focus !== before.focus;
+    pre.innerHTML = `<span class="${perdido ? 'fail' : 'pass'}">${perdido ? 'PIERDE ESTADO' : 'conserva estado'}</span>`
+      + `  scroll ${before.scroll}→${after.scroll}  foco ${before.focus}→${after.focus}`
+      + `\nRevisa a ojo: ¿saltó el contenido? ¿se reordenó de golpe?`;
+  } catch (e) { pre.textContent = 'no medible: ' + e.message; }
+}
+
+document.getElementById('unfold').onclick = simulateUnfold;
+document.getElementById('go').onclick = render;
+document.getElementById('probe').onclick = probeAll;
+urlInput.onkeydown = e => { if (e.key === 'Enter') render(); };
+render();
+</script></body></html>

@@ -1,0 +1,11 @@
+{
+  "name": "passport-ui",
+  "version": "0.1.0",
+  "description": "Audita, corrige y verifica visualmente UI web en viewports anchos y cortos (formato pasaporte / cover screens de plegables).",
+  "author": {
+    "name": "Naudy Romero",
+    "email": "naudyjoseromerovalero@gmail.com"
+  },
+  "license": "MIT",
+  "keywords": ["responsive", "css", "viewport", "foldable", "passport", "mobile", "frontend"]
+}

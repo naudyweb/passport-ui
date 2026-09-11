@@ -1,0 +1,17 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "naudy-plugins",
+  "description": "Plugins propios de Claude Code",
+  "owner": {
+    "name": "Naudy Romero",
+    "email": "naudyjoseromerovalero@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "passport-ui",
+      "description": "Optimiza UI web para pantallas anchas y cortas (formato pasaporte): plegables cerrados, 16:10, 5:3, 16:9.5.",
+      "category": "development",
+      "source": "./passport-ui"
+    }
+  ]
+}
