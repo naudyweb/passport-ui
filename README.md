@@ -67,12 +67,22 @@ bash .passport-ui/passport-ui/skills/passport-ui/scripts/scan.sh ./src
 
 ## Uso
 
-En Claude Code el skill se activa solo al trabajar en layouts responsive. Para invocarlo a mano:
+En Claude Code el skill se activa solo al trabajar en layouts responsive. Hay además tres comandos,
+uno por cada cosa que se puede querer hacer:
+
+| Comando | Qué hace | ¿Modifica archivos? |
+|---|---|---|
+| `/passport-optimize [ruta] [url]` | Pipeline completo: mide, corrige y vuelve a medir | **Sí** |
+| `/passport-audit [ruta]` | Diagnóstico priorizado, con archivo y línea | No |
+| `/passport-check [url]` | Verificación visual contra los perfiles | No |
 
 ```
-/passport-audit ./src                     # auditar y aplicar correcciones
-/passport-check http://localhost:3000     # solo verificar
+/passport-optimize ./src http://localhost:3000
 ```
+
+`optimize` mide el estado inicial en el navegador, aplica las correcciones por orden de severidad,
+vuelve a medir y entrega una tabla antes/después. Comprueba que el árbol de trabajo esté limpio antes
+de editar, de modo que el resultado sea revisable con `git diff` y reversible de un solo paso.
 
 Desde la línea de comandos:
 

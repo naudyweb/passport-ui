@@ -62,6 +62,17 @@ Corolarios, en orden de importancia:
 3. Corrige empezando por los `CRITICAL` (rompen la primera pantalla), luego `WARN`.
 4. Verifica con `references/verify.md`: captura antes y después a los mismos perfiles.
 
+## Comandos
+
+| Comando | Qué hace | ¿Modifica archivos? |
+|---|---|---|
+| `/passport-optimize [ruta] [url]` | Pipeline completo: mide, corrige y vuelve a medir | **Sí** |
+| `/passport-audit [ruta]` | Diagnóstico priorizado, con archivo y línea | No |
+| `/passport-check [url]` | Verificación visual contra los perfiles | No |
+
+Los flujos de arriba son lo que hacen esos comandos por dentro; también se siguen a mano cuando el
+usuario no los invoca.
+
 ## Referencias
 
 | Archivo | Cuándo leerlo |
