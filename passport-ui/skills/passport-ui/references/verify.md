@@ -21,9 +21,17 @@ iframe y Chrome no bloquea `file://`:
 
 ```bash
 cp <dir-de-este-skill>/assets/harness.html <raiz-servida-del-proyecto>/
-# si no hay dev server, uno mínimo:
-#   python3 -m http.server 8731   (en background)
+# si no hay dev server, uno mínimo — SIEMPRE atado a loopback:
+#   python3 -m http.server 8731 --bind 127.0.0.1
 ```
+
+> **Seguridad.** Dos cuidados, y ninguno es opcional:
+>
+> - `python3 -m http.server` **sin `--bind 127.0.0.1` escucha en `0.0.0.0`** y sirve el directorio
+>   entero —código fuente, `.env`, `.git`— a cualquier equipo de la red local.
+> - `harness.html` es una **herramienta de depuración**: enmarca la URL que se le pase por query
+>   string. No debe acabar desplegada ni confirmada en el repositorio. **Bórrala al terminar**, o
+>   añádela a `.gitignore`.
 
 ### Protocolo (agnóstico de herramienta)
 

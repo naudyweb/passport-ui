@@ -7,6 +7,9 @@ ROOT="${1:-.}"
 [ -d "$ROOT" ] || { echo "scan.sh: '$ROOT' no es un directorio" >&2; exit 2; }
 
 EXCLUDE_DIRS='node_modules|\.git|dist|build|out|\.next|\.nuxt|vendor|coverage|\.venv|__pycache__'
+# ROOT se interpola en un s||| de sed: escapa los metacaracteres y el delimitador
+ROOT_RE=$(printf '%s' "${ROOT%/}" | sed -e 's/[][\\.*^$|&/]/\\&/g')
+
 FILES=$(find "$ROOT" -type f \
   \( -name '*.css' -o -name '*.scss' -o -name '*.sass' -o -name '*.less' \
      -o -name '*.html' -o -name '*.vue' -o -name '*.svelte' \
@@ -36,7 +39,7 @@ report() {
   COUNTS[$sev]=$(( COUNTS[$sev] + n )); TOTAL=$(( TOTAL + n ))
   echo "── [$sev] $rule  ($n)"
   echo "   arreglo: $fix"
-  echo "$hits" | head -20 | sed -e "s|^${ROOT%/}/||" -e 's/^/   /'
+  echo "$hits" | head -20 | sed -e "s|^${ROOT_RE}/||" -e 's/^/   /'
   [ "$n" -gt 20 ] && echo "   … y $(( n - 20 )) más"
   echo
 }
@@ -52,7 +55,7 @@ report_js() {
   COUNTS[$sev]=$(( COUNTS[$sev] + n )); TOTAL=$(( TOTAL + n ))
   echo "── [$sev] $rule  ($n)"
   echo "   arreglo: $fix"
-  echo "$hits" | head -20 | sed -e "s|^${ROOT%/}/||" -e 's/^/   /'
+  echo "$hits" | head -20 | sed -e "s|^${ROOT_RE}/||" -e 's/^/   /'
   [ "$n" -gt 20 ] && echo "   … y $(( n - 20 )) más"
   echo
 }

@@ -72,6 +72,10 @@ Sirve `<PU>/assets/harness.html` por HTTP desde el mismo origen que la página y
 un dispositivo real y **no depende del gestor de ventanas** (redimensionar la ventana no funciona bajo
 Hyprland, sway o i3: se ignora en silencio).
 
+Si necesitas un servidor mínimo, átalo a loopback: `python3 -m http.server 8731 --bind 127.0.0.1`
+(sin `--bind` escucha en `0.0.0.0` y expone el proyecto entero a la red local). `harness.html` es una
+herramienta de depuración: bórrala al terminar, no la despliegues ni la confirmes en el repositorio.
+
 Pulsa **Medir** o ejecuta `probeAll()` en la consola. Criterios de aprobado en `<PU>/references/verify.md`.
 
 Para CI, con Playwright instalado: `node <PU>/scripts/shots.mjs <url> <dir-salida>` (exit ≠ 0 si algún

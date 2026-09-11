@@ -33,6 +33,19 @@ const PROFILES = [
   { name:'split-unfolded',    w:500, h:750 },
   { name:'phone-tall',        w:390, h:844 },
 ];
+// Solo http(s): un iframe con src="javascript:..." ejecuta con el origen de esta página,
+// así que cualquier otro esquema se rechaza.
+function safeUrl(raw) {
+  try {
+    const u = new URL(String(raw), location.href);
+    if (u.protocol === 'http:' || u.protocol === 'https:') return u.href;
+  } catch {}
+  return null;
+}
+
+// Nombre de clase leído de la página analizada: es contenido ajeno, no un identificador de confianza.
+const safeToken = t => String(t).replace(/[^\w.:-]/g, '·').slice(0, 40);
+
 const params = new URLSearchParams(location.search);
 const only = params.get('profile');
 const list = only ? PROFILES.filter(p => p.name === only) : PROFILES;
@@ -40,10 +53,19 @@ const urlInput = document.getElementById('url');
 urlInput.value = params.get('url') || 'http://localhost:3000';
 
 function render() {
-  const url = urlInput.value;
+  const url = safeUrl(urlInput.value);
+  const wrapEl = document.getElementById('wrap');
+  if (!url) {
+    wrapEl.textContent = '';
+    const err = document.createElement('div');
+    err.className = 'probe fail';
+    err.textContent = 'URL rechazada: solo se admiten http:// y https://.';
+    wrapEl.appendChild(err);
+    return;
+  }
   const fit = document.getElementById('fit').checked && !only;
-  const wrap = document.getElementById('wrap');
-  wrap.innerHTML = '';
+  const wrap = wrapEl;
+  wrap.textContent = '';
   const scale = fit ? Math.min(1, (innerHeight - 190) / Math.max(...list.map(p => p.h))) : 1;
   for (const p of list) {
     const box = document.createElement('div');
@@ -52,7 +74,7 @@ function render() {
     const holder = document.createElement('div');
     holder.style.cssText = `width:${p.w*scale}px;height:${p.h*scale}px;overflow:hidden`;
     const f = document.createElement('iframe');
-    f.width = p.w; f.height = p.h; f.src = url; f.dataset.profile = p.name;
+    f.width = p.w; f.height = p.h; f.src = url; f.dataset.profile = p.name;  // url ya validada
     f.style.cssText = `transform:scale(${scale});transform-origin:0 0`;
     holder.appendChild(f); box.appendChild(holder);
     const pre = document.createElement('div');
@@ -72,7 +94,7 @@ const PROBE = (win) => {
   const overflowing = all
     .filter(el => el.getBoundingClientRect().right > vw + 1)
     .slice(0, 8)
-    .map(el => el.tagName.toLowerCase() + (el.className ? '.' + String(el.className).split(' ')[0] : ''));
+    .map(el => el.tagName.toLowerCase() + (el.className ? '.' + safeToken(String(el.className).split(' ')[0]) : ''));
   // medida de línea: el párrafo más ancho, en caracteres
   let measureCh = 0;
   const ctx = document.createElement('canvas').getContext('2d');
@@ -101,11 +123,17 @@ function probeAll() {
     try {
       const r = PROBE(f.contentWindow);
       const bad = r.horizontalScroll || r.fixedChromePct > 25 || r.overflowing.length || r.measureCh > 85;
-      out.innerHTML = `<span class="${bad ? 'fail' : 'pass'}">${bad ? 'FALLA' : 'pasa'}</span>` +
+      out.textContent = '';
+      const veredicto = document.createElement('span');
+      veredicto.className = bad ? 'fail' : 'pass';
+      veredicto.textContent = bad ? 'FALLA' : 'pasa';
+      out.append(
+        veredicto,
         `  chrome ${r.fixedChromePct}%  scroll ${r.screensOfScroll}x` +
         (r.measureCh ? `  medida ${r.measureCh}ch${r.measureCh > 85 ? ' ⚠' : ''}` : '') +
         `  horiz ${r.horizontalScroll}` +
-        (r.overflowing.length ? `\ndesborda: ${r.overflowing.join(', ')}` : '');
+        (r.overflowing.length ? `\ndesborda: ${r.overflowing.join(', ')}` : '')
+      );
     } catch (e) {
       out.textContent = 'no medible (cross-origin): ' + e.message;
     }
@@ -119,14 +147,16 @@ window.probeAll = probeAll;
 async function simulateUnfold() {
   const from = PROFILES.find(p => p.name === 'passport-cover-xs');
   const to   = PROFILES.find(p => p.name === 'unfolded');
+  const url = safeUrl(urlInput.value);
+  if (!url) { render(); return; }
   const wrap = document.getElementById('wrap');
-  wrap.innerHTML = '';
+  wrap.textContent = '';
   const box = document.createElement('div');
   box.className = 'frame';
   box.innerHTML = `<h2>simulación de apertura · ${from.w}×${from.h} → ${to.w}×${to.h}</h2>`;
   const f = document.createElement('iframe');
   f.className = 'morphing';
-  f.src = urlInput.value; f.dataset.profile = 'unfold';
+  f.src = url; f.dataset.profile = 'unfold';
   const fit = Math.min(1, (innerHeight - 190) / to.h);
   f.style.width = from.w + 'px'; f.style.height = from.h + 'px';
   f.style.transform = `scale(${fit})`;
@@ -155,9 +185,13 @@ async function simulateUnfold() {
     const w = f.contentWindow;
     const after = { scroll: w.scrollY, focus: w.document.activeElement?.tagName };
     const perdido = Math.abs(after.scroll - before.scroll) > 24 || after.focus !== before.focus;
-    pre.innerHTML = `<span class="${perdido ? 'fail' : 'pass'}">${perdido ? 'PIERDE ESTADO' : 'conserva estado'}</span>`
-      + `  scroll ${before.scroll}→${after.scroll}  foco ${before.focus}→${after.focus}`
-      + `\nRevisa a ojo: ¿saltó el contenido? ¿se reordenó de golpe?`;
+    pre.textContent = '';
+    const v = document.createElement('span');
+    v.className = perdido ? 'fail' : 'pass';
+    v.textContent = perdido ? 'PIERDE ESTADO' : 'conserva estado';
+    pre.append(v,
+      `  scroll ${before.scroll}→${after.scroll}  foco ${safeToken(before.focus)}→${safeToken(after.focus)}`
+      + `\nRevisa a ojo: ¿saltó el contenido? ¿se reordenó de golpe?`);
   } catch (e) { pre.textContent = 'no medible: ' + e.message; }
 }
 
