@@ -163,6 +163,60 @@ Qué se puede detectar y con cuánta confianza: `references/detection.md`.
 En formato pasaporte los insets **laterales** son los relevantes, no los verticales. Requiere
 `<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">`.
 
+## §13 — Cuando sobra espacio: la pantalla abierta
+
+El interior de un plegable invierte el problema. Ya no falta alto: **sobra ancho**, y con él llegan
+fallos distintos que el resto de este documento no cubre.
+
+### Medida de línea
+
+```css
+/* El contenedor puede ser ancho; la línea de texto, no */
+.prose > * { max-inline-size: 65ch; }
+.prose > figure, .prose > table { max-inline-size: none; }
+```
+A 1000 px de ancho, un párrafo sin tope llega a 120 caracteres por línea y el ojo pierde el renglón al
+volver. El rango legible es **45–75 caracteres**; 65ch es el valor seguro.
+
+### Anchos fijos, nunca
+
+```css
+.shell { width: min(1440px, 100%); margin-inline: auto; }   /* ✅ */
+.shell { width: 1440px; }                                   /* ❌ desborda por debajo de 1440 */
+```
+
+### Es una pantalla táctil, no un escritorio
+
+El ancho de la pantalla abierta se parece al de un portátil, y ese parecido engaña: sigue siendo
+táctil y se sigue sujetando con las manos.
+
+```css
+/* El hover es un extra, nunca el único camino */
+@media (hover: hover) {
+  .card:hover .card__acciones { opacity: 1; }
+}
+.card__acciones { opacity: 1; }   /* accesible siempre */
+```
+Objetivos táctiles ≥ 44×44 px también aquí, y nada de tooltips como única fuente de información.
+
+### Aprovechar no es estirar
+
+Con 1000×750 hay sitio para **dos columnas**, no para una columna de 1000 px:
+
+```css
+.layout {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(22rem, 100%), 1fr));
+  gap: clamp(1rem, 3vmin, 2rem);
+}
+```
+Centrar una columna estrecha en un mar de vacío desaprovecha la pantalla tanto como estirarla.
+
+### Los pulgares siguen en los bordes
+
+Las acciones relacionadas se mantienen **agrupadas**, no repartidas a los dos extremos porque haya
+sitio: en una pantalla que se sujeta con dos manos, cruzar 1000 px es un gesto costoso.
+
 ---
 
 ## Traducción a Tailwind

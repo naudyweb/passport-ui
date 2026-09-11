@@ -57,6 +57,18 @@ report_js() {
   echo
 }
 
+# absence_if SEVERIDAD "regla" "regex_presente" "regex_guarda" "mensaje"
+#   → informa si lo primero aparece en el proyecto pero su guarda no
+absence_if() {
+  local sev="$1" rule="$2" re="$3" guard="$4" msg="$5"
+  echo "$FILES" | tr '\n' '\0' | xargs -0 grep -lE "$re" >/dev/null 2>&1 || return 0
+  echo "$FILES" | tr '\n' '\0' | xargs -0 grep -lE "$guard" >/dev/null 2>&1 && return 0
+  COUNTS[$sev]=$(( COUNTS[$sev] + 1 )); TOTAL=$(( TOTAL + 1 ))
+  echo "── [$sev] $rule"
+  echo "   $msg"
+  echo
+}
+
 # absence RULE "regex" "mensaje"  → informa si NO aparece en ningún archivo
 absence() {
   local rule="$1" re="$2" msg="$3"
@@ -126,6 +138,24 @@ report_js INFO "usa devicePosture / viewport segments desde JS" \
 report INFO "usa device-posture / viewport-segments en CSS" \
   'device-posture|horizontal-viewport-segments|vertical-viewport-segments' \
   'detection.md — acabado, no cimiento: la página debe estar bien sin esto en Safari/Firefox'
+
+# ── pantalla abierta: el problema deja de ser que falte alto y pasa a que sobre ancho
+
+absence_if WARN "sin tope de medida de línea" \
+  'font-size|line-height|<p[ >]|<article' \
+  'max-(width|inline-size)[^;]*[0-9]+(ch|em)|\bmax-w-(prose|\[[0-9]+ch\])' \
+  'En la pantalla abierta (1000px) el texto sin tope se estira a más de 100 caracteres por línea
+   y deja de ser legible. patterns.md §13 — max-inline-size: 65ch en los contenedores de texto.'
+
+absence_if WARN ":hover sin guardar tras @media (hover: hover)" \
+  ':hover' \
+  '\(hover:[[:space:]]*hover\)|\(any-hover' \
+  'El interior de un plegable es una pantalla táctil grande, no un escritorio: lo que solo se
+   alcanza con hover queda inaccesible. patterns.md §13.'
+
+report WARN "contenedor con ancho fijo grande (no se adapta a la pantalla abierta)" \
+  '(width|max-width|min-width)[[:space:]]*:[[:space:]]*(1[2-9][0-9]{2}|[2-9][0-9]{3})px' \
+  'patterns.md §13 — min(<ancho>, 100%) o una rejilla que reflowe, no un ancho fijo'
 
 absence "sin env(safe-area-inset-*)" 'safe-area-inset' \
   'Si hay elementos fijos en los bordes, en apaisado los insets laterales recortan contenido. patterns.md §12'

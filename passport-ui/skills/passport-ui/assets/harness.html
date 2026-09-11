@@ -30,6 +30,7 @@ const PROFILES = [
   { name:'passport-cover',    w:880, h:550 },
   { name:'passport-wide',     w:900, h:535 },
   { name:'unfolded',          w:1000,h:750 },
+  { name:'split-unfolded',    w:500, h:750 },
   { name:'phone-tall',        w:390, h:844 },
 ];
 const params = new URLSearchParams(location.search);
@@ -72,7 +73,20 @@ const PROBE = (win) => {
     .filter(el => el.getBoundingClientRect().right > vw + 1)
     .slice(0, 8)
     .map(el => el.tagName.toLowerCase() + (el.className ? '.' + String(el.className).split(' ')[0] : ''));
+  // medida de línea: el párrafo más ancho, en caracteres
+  let measureCh = 0;
+  const ctx = document.createElement('canvas').getContext('2d');
+  for (const el of d.querySelectorAll('p, li, blockquote, dd')) {
+    const r = el.getBoundingClientRect();
+    if (r.width < 40 || !el.textContent.trim()) continue;
+    const cs = win.getComputedStyle(el);
+    ctx.font = cs.font || `${cs.fontSize} ${cs.fontFamily}`;
+    const chw = ctx.measureText('0').width || parseFloat(cs.fontSize) * 0.5;
+    measureCh = Math.max(measureCh, Math.round(r.width / chw));
+  }
+
   return {
+    measureCh,
     pageHeight: d.scrollingElement.scrollHeight,
     screensOfScroll: +(d.scrollingElement.scrollHeight / vh).toFixed(1),
     horizontalScroll: d.scrollingElement.scrollWidth > vw + 1,
@@ -86,9 +100,10 @@ function probeAll() {
     const out = document.querySelector(`.probe[data-for="${f.dataset.profile}"]`);
     try {
       const r = PROBE(f.contentWindow);
-      const bad = r.horizontalScroll || r.fixedChromePct > 25 || r.overflowing.length;
+      const bad = r.horizontalScroll || r.fixedChromePct > 25 || r.overflowing.length || r.measureCh > 85;
       out.innerHTML = `<span class="${bad ? 'fail' : 'pass'}">${bad ? 'FALLA' : 'pasa'}</span>` +
         `  chrome ${r.fixedChromePct}%  scroll ${r.screensOfScroll}x` +
+        (r.measureCh ? `  medida ${r.measureCh}ch${r.measureCh > 85 ? ' ⚠' : ''}` : '') +
         `  horiz ${r.horizontalScroll}` +
         (r.overflowing.length ? `\ndesborda: ${r.overflowing.join(', ')}` : '');
     } catch (e) {

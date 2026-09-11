@@ -112,6 +112,25 @@ Una landing convencional, medida en el perfil `passport-cover-xs` (820×490):
 Bash y `grep` para la auditoría. Un navegador para la verificación. Node y Playwright únicamente para
 el script opcional de CI.
 
+## Límites conocidos
+
+`passport-ui` cubre por completo la **pantalla cerrada** — el formato pasaporte, que es el fallo
+dominante — y en lo esencial la **pantalla abierta**: medida de línea, anchos fijos, interacción
+táctil y multiventana.
+
+Fuera de eso hay tres límites que conviene conocer antes de confiar en la herramienta:
+
+- Los patrones de **bisagra** (`viewport-segments`) son una receta documentada, **no verificada en
+  hardware real**, y solo funcionan en navegadores Chromium.
+- `env(safe-area-inset-*)` **no es verificable** con el banco de pruebas: dentro de un iframe vale
+  cero. Se revisa leyendo el CSS.
+- La **postura a medio plegar** no es simulable en ningún entorno de escritorio, ni siquiera con las
+  herramientas de desarrollo del navegador.
+
+El método de iframes reproduce fielmente media queries, `dvh` y container queries, de modo que las
+mediciones son fiables para lo que miden. No reproduce el DPR, la bisagra ni las peculiaridades del
+navegador del dispositivo.
+
 ## Alcance
 
 `passport-ui` no decide la dirección estética de un proyecto — tipografía, paleta, personalidad

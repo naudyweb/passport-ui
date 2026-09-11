@@ -89,6 +89,24 @@ Todas bajo `<PU>/` — Markdown puro, sin dependencias de ninguna herramienta:
 | `references/detection.md` | Lógica que decide el layout; qué se puede detectar y cuánto fiarse |
 | `references/verify.md` | Comprobar el resultado |
 
+## Límites conocidos
+
+Decir "esta web funciona en un plegable" es una afirmación más amplia de lo que estas reglas sostiene.
+Lo que cubre de verdad:
+
+| | |
+|---|---|
+| **Pantalla cerrada** (cover, formato pasaporte) | cubierta: detección automática, patrones y verificación medible |
+| **Pantalla abierta** | cubierta en lo esencial — medida de línea, anchos fijos, hover, multiventana (`patterns.md` §13) |
+| **Bisagra** | hay una receta (`patterns.md` §11), **no verificada en hardware real**. Chromium únicamente |
+| **`env(safe-area-inset-*)`** | **no verificable** con el harness: vale 0 dentro de un iframe. Se revisa leyendo el CSS |
+| **Postura a medio plegar** | no simulable en ningún entorno de escritorio |
+| **Continuidad al desplegar** | se simula un cambio de tamaño del mismo documento; un dispositivo real puede recargar la página |
+
+Nada de esto se ha probado en un plegable físico. El método de iframes reproduce fielmente media
+queries, `dvh` y container queries — por eso las medidas son fiables para lo que miden — pero no el
+DPR, ni la bisagra, ni las peculiaridades del navegador del dispositivo.
+
 ## Alcance
 
 Esto no decide la dirección estética (tipografía, paleta, personalidad). Solo se ocupa de que el

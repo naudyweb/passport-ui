@@ -16,11 +16,16 @@ Tamaños en **píxeles CSS** (no físicos). Son los que hay que pasar a `resize_
 | `passport-cover-xs` | ~5:3 | **~820 × 490** | El caso más apretado: cover pequeño, alto mínimo |
 | `passport-wide` | ~16:9.5 | **~900 × 535** | Huawei Pura X View (6,39", 16:9.5), pasaporte no plegable |
 | `unfolded` | ~4:3 | **~1000 × 750** | Interior del plegable (7,6"), con bisagra |
+| `split-unfolded` | ~2:3 | **~500 × 750** | Interior del plegable en **multiventana**: dos apps lado a lado |
 | `phone-tall` | ~19.5:9 | **390 × 844** | Control: el móvil clásico, no debe romperse |
 | `landscape-classic` | ~16:9 | **844 × 390** | Control: móvil clásico girado, muy parecido a pasaporte |
 
-**Mínimo viable para una verificación rápida**: `passport-cover-xs`, `passport-wide`, `phone-tall`.
-El primero encuentra casi todos los fallos de alto; el último confirma que no rompiste el caso normal.
+**Mínimo viable para una verificación rápida**: `passport-cover-xs`, `unfolded`, `phone-tall`.
+El primero encuentra casi todos los fallos de alto, el segundo los de la pantalla abierta (medida de
+línea, anchos fijos), y el último confirma que no rompiste el caso normal.
+
+La multiventana no es un extra: en un plegable abierto es un uso habitual, y `split-unfolded` es más
+estrecho que un móvil normal siendo igual de alto — rompe los layouts calibrados para `unfolded`.
 
 ## Por qué estos rompen el CSS típico
 

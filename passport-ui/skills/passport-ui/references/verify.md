@@ -66,6 +66,7 @@ reutilices una del usuario) · `navigate` al harness · `javascript_tool` con
 | `desborda` | vacío | cualquier entrada nombra al culpable |
 | `scroll` en una landing | ≤ 1.5x hasta el CTA principal | el CTA cae tras la 2ª pantalla |
 | Captura en `passport-cover-xs` | acción principal visible sin scroll | — |
+| `medida` (caracteres por línea) | ≤ 85ch | > 85ch — texto ilegible en la pantalla abierta |
 | Control `phone-tall` | sigue pasando | arreglaste pasaporte rompiendo el móvil normal |
 
 A ojo en la captura, además: titulares que no caben en dos líneas, imágenes que ocupan más de la mitad
@@ -100,6 +101,8 @@ CSS en vez de desmontar y remontar componentes.
 ## Limitaciones del harness
 
 - No emula **DPR** ni user-agent móvil (irrelevante para fallos de layout, que es lo que buscamos).
+- No reproduce la **bisagra** ni el comportamiento del navegador del dispositivo: los patrones de
+  `viewport-segments` (`patterns.md` §11) **no están verificados en hardware real**.
 - `env(safe-area-inset-*)` vale 0 dentro del iframe: los safe areas se revisan leyendo el CSS, no midiendo.
 - Requiere **mismo origen**; una URL externa se muestra pero no se puede medir (lo dice en pantalla).
 

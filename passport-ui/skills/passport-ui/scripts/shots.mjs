@@ -10,6 +10,7 @@ const PROFILES = [
   { name: 'passport-cover', width: 880, height: 550, dpr: 2.5 },
   { name: 'passport-wide', width: 900, height: 535, dpr: 2.5 },
   { name: 'unfolded', width: 1000, height: 750, dpr: 2 },
+  { name: 'split-unfolded', width: 500, height: 750, dpr: 2 },
   { name: 'phone-tall', width: 390, height: 844, dpr: 3 },
 ];
 
@@ -23,8 +24,19 @@ const PROBE = () => {
     .filter((el) => el.getBoundingClientRect().right > vw + 1)
     .slice(0, 10)
     .map((el) => el.tagName.toLowerCase() + (el.className ? '.' + String(el.className).split(' ')[0] : ''));
+  let measureCh = 0;
+  const ctx = document.createElement('canvas').getContext('2d');
+  for (const el of document.querySelectorAll('p, li, blockquote, dd')) {
+    const r = el.getBoundingClientRect();
+    if (r.width < 40 || !el.textContent.trim()) continue;
+    const cs = getComputedStyle(el);
+    ctx.font = cs.font || `${cs.fontSize} ${cs.fontFamily}`;
+    const chw = ctx.measureText('0').width || parseFloat(cs.fontSize) * 0.5;
+    measureCh = Math.max(measureCh, Math.round(r.width / chw));
+  }
   return {
     viewport: `${vw}x${vh}`,
+    measureCh,
     pageHeight: document.scrollingElement.scrollHeight,
     screensOfScroll: +(document.scrollingElement.scrollHeight / vh).toFixed(1),
     horizontalScroll: document.scrollingElement.scrollWidth > vw + 1,
@@ -63,7 +75,8 @@ for (const p of PROFILES) {
     const file = `${outDir}/${p.name}.png`;
     await page.screenshot({ path: file });
     const verdict =
-      probe.horizontalScroll || probe.fixedChromePct > 25 || probe.overflowing.length ? 'FALLA' : 'pasa';
+      probe.horizontalScroll || probe.fixedChromePct > 25 || probe.overflowing.length || probe.measureCh > 85
+        ? 'FALLA' : 'pasa';
     rows.push({ perfil: p.name, ...probe, overflowing: probe.overflowing.join(', ') || '—', verdict, file });
   } catch (err) {
     rows.push({ perfil: p.name, verdict: 'ERROR', error: err.message });
