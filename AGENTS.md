@@ -6,18 +6,22 @@ otros. Los usuarios de Claude Code reciben lo mismo a través del skill `passpor
 
 ## Instalación en tu proyecto
 
-Copia el contenido del skill a tu repo y añade estas reglas a tu `AGENTS.md` (o usa este archivo tal cual):
+Trae las herramientas al repo y añade estas reglas al `AGENTS.md` del proyecto (o usa este archivo
+tal cual).
 
 ```bash
-# como submódulo, para recibir actualizaciones
+# submódulo: recibe actualizaciones con git submodule update --remote
 git submodule add https://github.com/naudyweb/passport-ui .passport-ui
-# o una copia sin más
+#   → <PU> = .passport-ui/passport-ui/skills/passport-ui
+
+# o una copia plana, sin submódulos
 git clone --depth 1 https://github.com/naudyweb/passport-ui /tmp/pu \
-  && cp -r /tmp/pu/passport-ui/skills/passport-ui .passport-ui
+  && cp -r /tmp/pu/passport-ui/skills/passport-ui .passport-ui && rm -rf /tmp/pu
+#   → <PU> = .passport-ui
 ```
 
-En lo que sigue, **`<PU>` es esa carpeta** (`.passport-ui/` si seguiste los comandos de arriba, o
-`passport-ui/skills/passport-ui/` si trabajas dentro de este propio repo).
+En lo que sigue, **`<PU>` es la carpeta que contiene `scripts/`, `references/` y `assets/`**, según la
+opción elegida. Dentro de este propio repo es `passport-ui/skills/passport-ui`.
 
 ## El problema
 

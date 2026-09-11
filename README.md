@@ -1,84 +1,122 @@
-# passport-ui
+<h1 align="center">passport-ui</h1>
 
-Plugin de [Claude Code](https://claude.com/claude-code) para adaptar interfaces web a las pantallas
-**anchas y cortas** que están volviendo al mercado: covers de plegables, móviles "formato pasaporte",
-relaciones de aspecto 16:10, 5:3 y 16:9.5.
+<p align="center">
+  <strong>Interfaces web que sobreviven a las pantallas anchas y cortas.</strong><br>
+  Auditoría, corrección y verificación visual para viewports de formato pasaporte.
+</p>
+
+<p align="center">
+  <a href="LICENSE"><img alt="Licencia MIT" src="https://img.shields.io/badge/licencia-MIT-blue.svg"></a>
+  <img alt="Sin dependencias" src="https://img.shields.io/badge/dependencias-ninguna-brightgreen.svg">
+  <img alt="Claude Code y AGENTS.md" src="https://img.shields.io/badge/compatible-Claude%20Code%20%C2%B7%20AGENTS.md-8A63D2.svg">
+</p>
+
+---
 
 ## El problema
 
-Un viewport de 880×550 px CSS **entra por los breakpoints de tablet porque es ancho, pero tiene la
-altura de un móvil apaisado**. Todo el CSS escrito en los últimos diez años asume lo contrario:
-móvil = estrecho y alto. El resultado son héroes de `100vh` que ocupan tres pantallas, headers y
-footers fijos que se comen el 60% del alto útil, modales que no caben y titulares gigantes.
+Las pantallas de los móviles están volviendo a ser **anchas y cortas**: covers de plegables, formatos
+pasaporte, relaciones de aspecto 16:10, 5:3 y 16:9.5.
 
-## Qué incluye
+Un viewport de 880×550 px CSS entra por los breakpoints de tablet **porque es ancho**, pero tiene la
+altura de un móvil apaisado. El CSS de la última década asume justo lo contrario — móvil igual a
+estrecho y alto — y el resultado es predecible:
 
-- **Skill `passport-ui`** — se activa solo cuando trabajas en UI responsive. Su regla madre: *nunca
-  decidas el layout solo por el ancho; usa ancho, alto y aspect-ratio*.
-- **`/passport-audit [ruta]`** — escanea un proyecto, prioriza los hallazgos y aplica los arreglos.
-- **`/passport-check [url]`** — verificación visual contra perfiles de viewport reales.
-- **`scripts/scan.sh`** — escáner estático determinista: 13 anti-patrones con severidad, línea exacta
-  y el arreglo concreto para cada uno.
-- **`assets/harness.html`** — banco de pruebas que carga la página en un iframe por perfil y mide
-  chrome fijo, scroll y desbordamientos. Incluye un botón **Simular apertura** que lleva el mismo
-  iframe de cover a plegable abierto sin recargar, para ver qué pasa con el estado del usuario.
-- **Referencias** sobre anti-patrones, patrones correctos, perfiles de dispositivo, detección de
-  plegables y protocolo de verificación.
+- héroes de `100vh` que ocupan tres pantallas
+- headers y footers fijos que consumen el 60% del alto útil
+- modales más altos que la pantalla, con los botones fuera de alcance
+- titulares escalados por el ancho que quedan desproporcionados
+
+`passport-ui` detecta esos fallos, propone el arreglo concreto y verifica el resultado contra perfiles
+de viewport reales.
+
+## Características
+
+| | |
+|---|---|
+| **Auditoría estática** | 13 anti-patrones con severidad, línea exacta y arreglo sugerido. Bash y grep: sin instalación, sin dependencias |
+| **Verificación visual** | Banco de pruebas que carga la página en un iframe por perfil y mide chrome fijo, scroll y desbordamientos |
+| **Simulación de apertura** | Transición de cover a plegable abierto sin recargar, para comprobar que el estado del usuario sobrevive |
+| **Corpus de patrones** | Cinco referencias sobre unidades, breakpoints de tres entradas, container queries, bisagras y detección de plegables |
+| **Listo para CI** | Script de Playwright que devuelve código de salida distinto de cero cuando un perfil falla |
 
 ## Instalación
+
+**Claude Code** — skill con activación automática y dos comandos:
 
 ```
 /plugin marketplace add naudyweb/passport-ui
 /plugin install passport-ui
 ```
 
-## Con otras herramientas (Cursor, Copilot, Codex, Gemini CLI, Zed, Windsurf…)
-
-El conocimiento del plugin no depende de Claude: `scan.sh` es bash + grep, `harness.html` es HTML
-suelto, `shots.mjs` es Playwright y las cinco referencias son Markdown. Lo único específico de Claude
-Code es el empaquetado — el frontmatter del skill, los dos comandos, y un apéndice de `verify.md`.
-
-Para el resto de agentes hay un [`AGENTS.md`](AGENTS.md) en la raíz, el formato que leen más de 30
-herramientas:
+**Otros agentes** (Codex, Copilot, Cursor, Gemini CLI, Aider, Zed, Windsurf) — vía
+[`AGENTS.md`](AGENTS.md), el formato de instrucciones de la Linux Foundation:
 
 ```bash
 git submodule add https://github.com/naudyweb/passport-ui .passport-ui
-# y añade el contenido de .passport-ui/../../AGENTS.md a tu AGENTS.md
 ```
 
-Y sin ningún agente, las herramientas funcionan solas:
+Después, copia el contenido de [`AGENTS.md`](AGENTS.md) al `AGENTS.md` del proyecto. Ese archivo
+documenta las dos formas de instalación y las rutas que resultan de cada una.
+
+**Sin agente** — las herramientas funcionan solas:
 
 ```bash
-bash .passport-ui/scripts/scan.sh ./src          # auditoría estática
-node .passport-ui/scripts/shots.mjs <url> <dir>  # capturas + veredicto, para CI
+bash .passport-ui/passport-ui/skills/passport-ui/scripts/scan.sh ./src
 ```
 
 ## Uso
 
-Normalmente no hay que invocarlo: el skill se activa solo al trabajar en layouts responsive. Para
-lanzarlo a mano:
+En Claude Code el skill se activa solo al trabajar en layouts responsive. Para invocarlo a mano:
 
 ```
-/passport-audit ./src      # auditar y corregir
-/passport-check http://localhost:3000   # solo verificar
+/passport-audit ./src                     # auditar y aplicar correcciones
+/passport-check http://localhost:3000     # solo verificar
 ```
 
-## Resultado de ejemplo
+Desde la línea de comandos:
 
-Una landing corriente, medida en el perfil `passport-cover-xs` (820×490):
+```bash
+scan.sh <ruta>                       # informe de anti-patrones
+node shots.mjs <url> <dir-salida>    # capturas y veredicto por perfil
+```
 
-| | Antes | Después |
+## Cómo funciona
+
+La regla que ordena todo el proyecto:
+
+> **El layout no se decide solo por el ancho.** Cada decisión usa las tres entradas: ancho, alto y
+> aspect-ratio.
+
+La verificación carga la página objetivo en **iframes dimensionados a cada perfil**, en lugar de
+redimensionar la ventana del navegador. Las media queries, `dvh`, `cqi` y `aspect-ratio` responden al
+tamaño del iframe, de modo que la medición equivale a la de un dispositivo real y no depende del
+gestor de ventanas — los gestores tiling ignoran las peticiones de redimensionado sin avisar, lo que
+falsea silenciosamente cualquier prueba basada en ellas.
+
+Perfiles incluidos: `passport-cover-xs`, `passport-cover`, `passport-wide`, `unfolded` y `phone-tall`
+como control de regresión.
+
+## Resultados
+
+Una landing convencional, medida en el perfil `passport-cover-xs` (820×490):
+
+| Métrica | Antes | Después |
 |---|---|---|
 | Chrome fijo | 31% del alto | 11% |
-| Scroll hasta el CTA | 2.3 pantallas | 1 |
+| Scroll hasta la acción principal | 2,3 pantallas | 1 |
 | Veredicto | FALLA | pasa |
 
-## Nota sobre `resize_window`
+## Requisitos
 
-Bajo un gestor de ventanas tiling (Hyprland, sway, i3), redimensionar la ventana del navegador para
-probar tamaños **no funciona**: la petición se ignora en silencio y la medición sale falseada. Por eso
-el harness usa iframes, que son independientes del gestor de ventanas.
+Bash y `grep` para la auditoría. Un navegador para la verificación. Node y Playwright únicamente para
+el script opcional de CI.
+
+## Alcance
+
+`passport-ui` no decide la dirección estética de un proyecto — tipografía, paleta, personalidad
+visual. Se ocupa exclusivamente de que el contenido quepa y sea usable en viewports anchos y cortos.
 
 ## Licencia
 
-MIT
+[MIT](LICENSE)
