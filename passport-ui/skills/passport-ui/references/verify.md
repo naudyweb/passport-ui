@@ -9,9 +9,10 @@ falla; el harness a 820×490 no.
 Las media queries, `dvh`, `cqi` y `aspect-ratio` responden al tamaño del iframe, así que el resultado es
 idéntico a un viewport real — y **no depende del gestor de ventanas**.
 
-> ⚠️ **No uses `resize_window` para esto.** Bajo un WM tiling (Hyprland/Omarchy, sway, i3) la petición se
-> ignora en silencio: la llamada devuelve éxito y el viewport sigue igual. Medido en la práctica:
-> `resize_window(820,600)` → `innerWidth` seguía siendo 1707. El harness no tiene ese problema.
+> ⚠️ **No redimensiones la ventana del navegador para esto.** Bajo un gestor de ventanas tiling
+> (Hyprland, sway, i3) la petición se ignora en silencio: la API devuelve éxito y el viewport sigue
+> igual. Medido en la práctica: pedir 820×600 dejó `innerWidth` en 1707. El harness, al usar iframes,
+> no depende del gestor de ventanas.
 
 ### Puesta en marcha
 
@@ -24,25 +25,37 @@ cp <dir-de-este-skill>/assets/harness.html <raiz-servida-del-proyecto>/
 #   python3 -m http.server 8731   (en background)
 ```
 
-### Herramientas de Chrome (una sola llamada a ToolSearch)
+### Protocolo (agnóstico de herramienta)
+
+Sirve para cualquier agente con acceso a un navegador, y para una persona a mano:
+
+1. Abre `http://<host>/harness.html?url=<url-codificada>` — todos los perfiles en fila.
+   Para uno solo a tamaño 1:1: `&profile=passport-cover-xs`.
+2. Espera a que carguen los iframes (~900 ms) y ejecuta en la consola de la página:
+   ```js
+   probeAll()
+   ```
+   Devuelve una línea por perfil: `pasa|FALLA · chrome % · pantallas de scroll · scroll horizontal · qué desborda`.
+   Los mismos números se pintan bajo cada iframe, así que también se leen en una captura.
+3. Captura la pantalla.
+4. Al corregir: repite 2–3 y presenta **antes y después del mismo perfil**.
+5. Cierra la pestaña y para el servidor si lo levantaste tú.
+
+Sin agente ni consola: abre el harness en el navegador y pulsa **Medir**. Los veredictos aparecen
+bajo cada iframe.
+
+### Con Claude Code
+
+Herramientas de Chrome, en una sola llamada a ToolSearch:
 
 ```
 select:mcp__claude-in-chrome__tabs_context_mcp,mcp__claude-in-chrome__tabs_create_mcp,mcp__claude-in-chrome__navigate,mcp__claude-in-chrome__computer,mcp__claude-in-chrome__javascript_tool,mcp__claude-in-chrome__tabs_close_mcp
 ```
 
-### Protocolo
-
-1. `tabs_context_mcp` → `tabs_create_mcp` (pestaña nueva; no reutilices una del usuario).
-2. `navigate` a `http://<host>/harness.html?url=<url-codificada>` — todos los perfiles en fila.
-   Para uno solo a tamaño 1:1: `&profile=passport-cover-xs`.
-3. Medir: `javascript_tool` con
-   ```js
-   await new Promise(r => setTimeout(r, 900)); probeAll()
-   ```
-   Devuelve una línea por perfil: `pasa|FALLA · chrome % · pantallas de scroll · scroll horizontal · qué desborda`.
-4. `computer` → `screenshot` (`save_to_disk: true` si el usuario quiere el archivo).
-5. Al corregir: repite 3–4 y presenta **antes y después del mismo perfil**.
-6. `tabs_close_mcp` y para el servidor si lo levantaste tú.
+Mapeo sobre el protocolo de arriba: `tabs_context_mcp` → `tabs_create_mcp` (pestaña nueva, no
+reutilices una del usuario) · `navigate` al harness · `javascript_tool` con
+`await new Promise(r => setTimeout(r, 900)); probeAll()` · `computer` → `screenshot`
+(`save_to_disk: true` si el usuario quiere el archivo) · `tabs_close_mcp` al terminar.
 
 ### Criterios de aprobado
 
@@ -64,7 +77,7 @@ perfiles en verde.
 
 ## Simular la apertura del plegable
 
-El botón **Simular apertura** (o `await simulateUnfold()` desde `javascript_tool`) lleva **el mismo
+El botón **Simular apertura** (o `await simulateUnfold()` en la consola) lleva **el mismo
 iframe** de `passport-cover-xs` (820×490) a `unfolded` (1000×750) con una transición, **sin recargar**.
 Es la única forma de ver lo que ve el usuario que abre el móvil a mitad de una frase.
 

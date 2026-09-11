@@ -32,6 +32,27 @@ footers fijos que se comen el 60% del alto útil, modales que no caben y titular
 /plugin install passport-ui
 ```
 
+## Con otras herramientas (Cursor, Copilot, Codex, Gemini CLI, Zed, Windsurf…)
+
+El conocimiento del plugin no depende de Claude: `scan.sh` es bash + grep, `harness.html` es HTML
+suelto, `shots.mjs` es Playwright y las cinco referencias son Markdown. Lo único específico de Claude
+Code es el empaquetado — el frontmatter del skill, los dos comandos, y un apéndice de `verify.md`.
+
+Para el resto de agentes hay un [`AGENTS.md`](AGENTS.md) en la raíz, el formato que leen más de 30
+herramientas:
+
+```bash
+git submodule add https://github.com/naudyweb/passport-ui .passport-ui
+# y añade el contenido de .passport-ui/../../AGENTS.md a tu AGENTS.md
+```
+
+Y sin ningún agente, las herramientas funcionan solas:
+
+```bash
+bash .passport-ui/scripts/scan.sh ./src          # auditoría estática
+node .passport-ui/scripts/shots.mjs <url> <dir>  # capturas + veredicto, para CI
+```
+
 ## Uso
 
 Normalmente no hay que invocarlo: el skill se activa solo al trabajar en layouts responsive. Para
